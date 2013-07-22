@@ -1,0 +1,36 @@
+<p><input id="user" type="text" value="" /></p>
+<p><input id="target" type="text" /></p>
+<!-- <p><input id="connect" type="button" value="connect" /></p> -->
+<p><input id="send" type="button" value="send" /></p>
+<div id="content"></div>
+<script src="http://labs.chiapei.me:8000/socket.io/socket.io.js"></script>
+<script>
+var btnConnect = document.getElementById("connect");
+var btnSend = document.getElementById("send");
+var content = document.getElementById("content");
+var socket = io.connect('http://labs.chiapei.me:8000/');
+document.getElementById("user").value = Math.floor(Math.random() * 1000000);
+
+socket.on('connect', function() {
+  socket.emit('signin', document.getElementById("user").value);
+});
+
+socket.on('update_pattern', function(pattern) {
+  output(pattern);
+});
+
+socket.on('conn_ok', function(data) {
+  output(data);
+});
+
+// btnConnect.addEventListener("click", connectServer, false);
+
+
+btnSend.addEventListener("click", sendMessage, false);
+function sendMessage() {
+  socket.emit('turn', document.getElementById("user").value, document.getElementById("target").value);
+}
+function output(msg) {
+  content.innerHTML = '<p>' + msg + '</p>';
+}
+</script>
