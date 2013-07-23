@@ -1,5 +1,73 @@
+<script src="/gomoku/jquery-1.10.2.min.js"></script>
+<p><input id="user" type="text" value="" readonly="readonly" /></p>
 <canvas id="canvas"></canvas>
 <script>
+$(document).ready(function() {
+  // initialize the pattern
+  draw(pattern);
+
+  // a random username
+  $('#user').val(Math.floor(Math.random() * 1000000));
+
+  // add click event
+  $('#canvas').click(function(event) {
+    var x, y, m, n, elem;
+    var canvas = document.getElementById("canvas");
+
+    if (event.x != undefined && event.y != undefined) {
+      x = event.x + document.body.scrollLeft +
+          document.documentElement.scrollLeft;
+      y = event.y + document.body.scrollTop +
+          document.documentElement.scrollTop;
+    } else { // Firefox method to get the position
+      x = event.clientX + document.body.scrollLeft +
+          document.documentElement.scrollLeft;
+      y = event.clientY + document.body.scrollTop +
+          document.documentElement.scrollTop;
+    }
+    x -= canvas.offsetLeft;
+    y -= canvas.offsetTop;
+
+    list.forEach(function(v, k) {
+      if(Math.abs(x - v) < 17) {
+        m = k;
+      }
+      if(Math.abs(y - v) < 17) {
+        n = k;
+      }
+      elem = n * 15 + m;
+    });
+
+    console.log("m:" + m + " n:" + n);
+    console.log("elem:" + elem);
+
+    if(!isNaN(elem)) {
+      switch(pattern[elem]) {
+        case 1:
+        case 2:
+          break;
+        case 0:
+        default:
+          round++;
+          pattern[elem] = (round % 2) != 0 ? 1 : 2;
+          break;
+      }
+    }
+    socket.emit('turn', $('#user').val(), elem);
+    // draw(pattern);
+  });
+
+  var socket = io.connect('http://labs.chiapei.me:8000/');
+  socket.on('connect', function() {
+    socket.emit('signin', $('#user').val());
+  });
+
+  socket.on('update_pattern', function(upt_pattern) {
+    pattern = upt_pattern;
+    draw(pattern);
+  });
+});
+
 var pattern = new Array(225);
 var list = new Array(15);
 for(var i = 0; i < list.length; i++) {
@@ -46,54 +114,6 @@ function draw(pattern) {
     }
   }
 }
-function updatePattern(event) {
-  var x, y, m, n, elem;
-  var canvas = document.getElementById("canvas");
-
-  if (event.x != undefined && event.y != undefined) {
-    x = event.x + document.body.scrollLeft +
-        document.documentElement.scrollLeft;
-    y = event.y + document.body.scrollTop +
-        document.documentElement.scrollTop;
-  } else { // Firefox method to get the position
-    x = event.clientX + document.body.scrollLeft +
-        document.documentElement.scrollLeft;
-    y = event.clientY + document.body.scrollTop +
-        document.documentElement.scrollTop;
-  }
-  x -= canvas.offsetLeft;
-  y -= canvas.offsetTop;
-
-  list.forEach(function(v, k) {
-    if(Math.abs(x - v) < 17) {
-      m = k;
-    }
-    if(Math.abs(y - v) < 17) {
-      n = k;
-    }
-    elem = n * 15 + m;
-  });
-
-  // console.log("x:" + x + " y:" + y);
-  console.log("m:" + m + " n:" + n);
-  console.log("elem:" + elem);
-
-  if(!isNaN(elem)) {
-    switch(pattern[elem]) {
-      case 1:
-      case 2:
-        break;
-      case 0:
-      default:
-        round++;
-        pattern[elem] = (round % 2) != 0 ? 1 : 2;
-        break;
-    }
-  }
-  draw(pattern);
-} 
-draw(pattern);
-canvas.addEventListener("mousedown", updatePattern, false);
 </script>
 <script src="http://labs.chiapei.me:8000/socket.io/socket.io.js"></script>
 <script>

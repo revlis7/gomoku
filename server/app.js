@@ -1,19 +1,19 @@
 var io = require('socket.io').listen(8000);
 
 var room  = ['', ''];
+var user_id = {};
 var pattern = new Array(225);
 var current = '';
 
 io.sockets.on('connection', function (socket) {
-  // 
   socket.on('signin', function (user) {
-    console.log(user);
-
+    console.log(socket.id);
     for(var i = 0; i < room.length; i++) {
       if(room[i] == '') {
         socket.emit('conn_ok', 'server connnected');
 
         room[i] = user;
+        user_id[socket.id] = i;
         if(i == 0) {
           current = user;
         }
@@ -52,9 +52,11 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function() {
-    room = ['', ''];
+    room[user_id[socket.id]] = '';
+    delete user_id[socket.id];
     pattern = new Array(225);
     current = '';
+    io.sockets.emit('update_pattern', pattern);
     console.log('user disconnected');
   });
 });
