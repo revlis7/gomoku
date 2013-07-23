@@ -10,7 +10,7 @@ io.sockets.on('connection', function (socket) {
     console.log(socket.id);
     for(var i = 0; i < room.length; i++) {
       if(room[i] == '') {
-        socket.emit('conn_ok', 'server connnected');
+        socket.emit('message', 'server connnected');
 
         room[i] = user;
         user_id[socket.id] = i;

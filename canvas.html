@@ -1,8 +1,8 @@
 <script src="/gomoku/jquery-1.10.2.min.js"></script>
-<p><input id="user" type="text" value="" readonly="readonly" /></p>
+<p><input id="user" type="text" value="" readonly="readonly" /><span id="message"></span></p>
 <canvas id="canvas"></canvas>
 <script>
-$(document).ready(function() {
+$(document).ready(function(event) {
   // initialize the pattern
   draw(pattern);
 
@@ -12,21 +12,10 @@ $(document).ready(function() {
   // add click event
   $('#canvas').click(function(event) {
     var x, y, m, n, elem;
-    var canvas = document.getElementById("canvas");
+    var canvas = $('#canvas');
 
-    if (event.x != undefined && event.y != undefined) {
-      x = event.x + document.body.scrollLeft +
-          document.documentElement.scrollLeft;
-      y = event.y + document.body.scrollTop +
-          document.documentElement.scrollTop;
-    } else { // Firefox method to get the position
-      x = event.clientX + document.body.scrollLeft +
-          document.documentElement.scrollLeft;
-      y = event.clientY + document.body.scrollTop +
-          document.documentElement.scrollTop;
-    }
-    x -= canvas.offsetLeft;
-    y -= canvas.offsetTop;
+    var x = event.pageX - $(this).position().left,
+        y = event.pageY - $(this).position().top;
 
     list.forEach(function(v, k) {
       if(Math.abs(x - v) < 17) {
@@ -65,6 +54,10 @@ $(document).ready(function() {
   socket.on('update_pattern', function(upt_pattern) {
     pattern = upt_pattern;
     draw(pattern);
+  });
+
+  socket.on('message', function(msg) {
+    $('#message').html(msg);
   });
 });
 
