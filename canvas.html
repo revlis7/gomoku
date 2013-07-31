@@ -42,7 +42,7 @@ $(document).ready(function(event) {
           break;
       }
     }
-    socket.emit('turn', $('#user').val(), elem);
+    socket.emit('turn', elem);
     // draw(pattern);
   });
 

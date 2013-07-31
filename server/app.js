@@ -1,62 +1,89 @@
 var io = require('socket.io').listen(8000);
 
-var room  = ['', ''];
-var user_id = {};
-var pattern = new Array(225);
-var current = '';
+var lobby_max = 100;
+var room_max  = 2;
+
+var lobby = new Array(lobby_max);
+var user_list = {};
+
+var pattern = new Array(lobby_max);
+var current = new Array(lobby_max);
 
 io.sockets.on('connection', function (socket) {
   socket.on('signin', function (user) {
-    console.log(socket.id);
-    for(var i = 0; i < room.length; i++) {
-      if(room[i] == '') {
+    for(var i = 0; i < lobby.length; i++) {
+      if(typeof lobby[i] === "undefined" || lobby[i] === null) {
+        lobby[i] = new Array();
+      }
+      if(lobby[i].length != room_max) {
+        lobby[i].push(user);
+        user_list[socket.id] = { "user" : user, "lobby" : i };
+        if(lobby[i].length == room_max) {
+          current[i] = lobby[i][0];
+          pattern[i] = new Array();
+          for(var n = 0; n < 255; n++) {
+            pattern[i][n] = 0;
+          }
+        }
+
         socket.emit('message', 'server connnected');
-
-        room[i] = user;
-        user_id[socket.id] = i;
-        if(i == 0) {
-          current = user;
-        }
-        break;
+        io.sockets.emit('update_pattern', pattern[i]);
+        console.log('user connected');
+        console.log(user_list);
+        console.log(lobby[i]);
+        return;
       }
     }
-    io.sockets.emit('update_pattern', pattern);
-    console.log(room);
+    socket.emit('message', 'server full');
   });
 
-  socket.on('turn', function(user, target) {
-    // check user's turn
-    if(current != user) {
-      return;
-    }
-    // check pattern is correct
-    if(pattern[target] == 1 || pattern[target] == 2) {
-      return;
-    }
+  socket.on('turn', function (target) {
+    if(user_list[socket.id]) {
+      console.log('user\'s turn');
+      var user_lobby = user_list[socket.id].lobby;
+      var user_name  = user_list[socket.id].user;
+console.log('lobby: ' + user_lobby);
+console.log('user: ' + user_name);
+console.log('current_user: ' + current);
+console.log('pattern: ' + pattern[user_lobby][target]);
 
-    for(var i = 0; i < room.length; i++) {
-      if(room[i] == user) {
-        // update pattern
-        console.log('update pattern');
-        if(i == 0) {
-          pattern[target] = 1;
-          current = room[1];
-        } else {
-          pattern[target] = 2;
-          current = room[0];
-        }
-        break;
+      // check user's turn
+      if(current[user_lobby] != user_name) {
+        return;
       }
+      // check pattern is correct
+      if(pattern[user_lobby][target] == 1 || pattern[user_lobby][target] == 2) {
+        return;
+      }
+
+      var team = lobby[user_lobby].indexOf(user_name);
+
+      if(team == 0) {
+        pattern[user_lobby][target] = 1;
+        current[user_lobby] = lobby[user_lobby][1];
+      } else {
+        pattern[user_lobby][target] = 2;
+        current[user_lobby] = lobby[user_lobby][0];
+      }
+
+      io.sockets.emit('update_pattern', pattern[user_lobby]);
     }
-    io.sockets.emit('update_pattern', pattern);
   });
 
-  socket.on('disconnect', function() {
-    room[user_id[socket.id]] = '';
-    delete user_id[socket.id];
-    pattern = new Array(225);
-    current = '';
-    io.sockets.emit('update_pattern', pattern);
-    console.log('user disconnected');
+  socket.on('disconnect', function () {
+    if(user_list[socket.id]) {
+      var user_lobby = user_list[socket.id].lobby;
+      var user_name  = user_list[socket.id].user;
+
+      lobby[user_lobby].splice(lobby[user_lobby].indexOf(user_name), 1);
+      delete user_list[socket.id];
+      pattern[user_lobby] = null;
+      current[user_lobby] = null;
+
+      io.sockets.emit('update_pattern', pattern);
+      console.log('user disconnected');
+      console.log(user_list);
+      console.log(lobby[user_lobby]);
+    }
   });
 });
