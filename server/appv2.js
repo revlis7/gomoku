@@ -8,11 +8,11 @@ var luigi = null;
 
 var pattern = new Array();
 
-var init_pattern = function() {
-  for(var n = 0; n < 255; n++) {
-    if(n === 25) {
+var init_pattern = function () {
+  for (var n = 0; n < 255; n++) {
+    if (n === 25) {
       pattern[n] = 1;
-    } else if(n === 47) {
+    } else if (n === 47) {
       pattern[n] = 2;
     } else {
       pattern[n] = 0;
@@ -23,7 +23,7 @@ var init_pattern = function() {
 io.sockets.on('connection', function (socket) {
   // user sign in
   socket.on('signin', function (user) {
-    if(mario === null) {
+    if (mario === null) {
       mario_id = socket.id;
       mario    = user;
 
@@ -31,11 +31,11 @@ io.sockets.on('connection', function (socket) {
       console.log('user connected');
 
       // initialize pattern
-      if(luigi) {
+      if (luigi) {
         init_pattern();
         io.sockets.emit('update_pattern', pattern);
       }
-    } else if(luigi === null) {
+    } else if (luigi === null) {
       luigi_id = socket.id;
       luigi    = user;
 
@@ -43,22 +43,24 @@ io.sockets.on('connection', function (socket) {
       console.log('user connected');
 
       // initialize pattern
-      if(mario) {
+      if (mario) {
         init_pattern();
         io.sockets.emit('update_pattern', pattern);
       }
     } else {
       console.log('server full');
       socket.emit('message', 'server full');
+      // kick user
+      socket.disconnect();
     }
   });
 
   // user sign out
   socket.on('disconnect', function () {
-    if(mario_id === socket.id) {
+    if (mario_id === socket.id) {
       mario_id = null;
       mario    = null;
-    } else if(luigi_id === socket.id) {
+    } else if (luigi_id === socket.id) {
       luigi_id = null;
       luigi    = null;
     }
