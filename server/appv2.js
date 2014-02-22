@@ -32,6 +32,8 @@ io.sockets.on('connection', function (socket) {
 
       // initialize pattern
       if (luigi) {
+        socket.emit('update_rival', luigi);
+        io.sockets.socket(luigi_id).emit('update_rival', mario);
         init_pattern();
         io.sockets.emit('update_pattern', pattern);
       }
@@ -44,6 +46,8 @@ io.sockets.on('connection', function (socket) {
 
       // initialize pattern
       if (mario) {
+        socket.emit('update_rival', mario);
+        io.sockets.socket(mario_id).emit('update_rival', luigi);
         init_pattern();
         io.sockets.emit('update_pattern', pattern);
       }

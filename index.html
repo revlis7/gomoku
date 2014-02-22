@@ -58,6 +58,10 @@
           socket.emit('signin', $('#user').val());
         });
 
+        socket.on('update_rival', function (rival) {
+          $('#message').html('your rival: ' + rival);
+        });
+
         socket.on('update_pattern', function (upt_pattern) {
           pattern = upt_pattern;
           // draw(pattern);
